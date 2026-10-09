@@ -5,9 +5,12 @@ project_root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 cd "${project_root}"
 
 stage=${1:-all}
-settings_file=${GENOMICSEM_SETTINGS:-config/workflow.tsv}
+config_file=${GENOMICSEM_SETTINGS:-config/analysis.yaml}
+python3 workflow/scripts/configuration.py materialize --config "${config_file}" --project-root .
+settings_file=.work/config/workflow.tsv
 export GENOMICSEM_RUN_DATE=$(python3 workflow/scripts/paths.py)
 results_dir="results/${GENOMICSEM_RUN_DATE}"
+intermediate_results_dir=".work/results/${GENOMICSEM_RUN_DATE}"
 mkdir -p "${results_dir}"
 
 setting() {
@@ -55,7 +58,7 @@ models() {
     workflow/bin/run-r workflow/scripts/03_fit_model.R \
       .work/ldsc/ldsc_output.rds "${model_file}" "${label}"
   done < "${models_config}"
-  workflow/bin/run-r workflow/scripts/04_compare_models.R "${models_config}" "${results_dir}"
+  workflow/bin/run-r workflow/scripts/04_compare_models.R "${models_config}" "${intermediate_results_dir}"
 }
 
 html_report() {
@@ -86,21 +89,6 @@ case "${stage}" in
   setup|check|all|validate|prepare|munge|ldsc|models|report|html-report|gwas-pilot|gwas) ;;
   *) echo "Unknown stage: ${stage}" >&2; exit 2 ;;
 esac
-
-run_manifest=$(python3 workflow/scripts/09_provenance.py start --settings "${settings_file}" --stage "${stage}")
-export GENOMICSEM_RUN_MANIFEST="${run_manifest}"
-finish_run() {
-  run_exit=$?
-  trap - EXIT
-  python3 workflow/scripts/09_provenance.py finish --manifest "${run_manifest}" --exit-code "${run_exit}" || run_exit=1
-  if [[ "${run_exit}" == 0 ]]; then
-    case "${stage}" in
-      all|report|html-report|gwas-pilot|gwas) html_report || run_exit=$? ;;
-    esac
-  fi
-  exit "${run_exit}"
-}
-trap finish_run EXIT
 
 case "${stage}" in
   setup) setup ;;

@@ -34,7 +34,7 @@ read_traits <- function(path) {
   traits
 }
 
-read_workflow_settings <- function(path = "config/workflow.tsv") {
+read_workflow_settings <- function(path = ".work/config/workflow.tsv") {
   path <- project_path(path)
   settings <- read.delim(
     path, header = TRUE, sep = "\t", quote = "", comment.char = "",
@@ -114,4 +114,9 @@ results_directory <- function() {
   parsed <- suppressWarnings(as.Date(run_date, format = "%Y-%m-%d"))
   if (is.na(parsed) || !identical(format(parsed, "%Y-%m-%d"), run_date)) stop("GENOMICSEM_RUN_DATE must be YYYY-MM-DD")
   ensure_directory(file.path(project_root(), "results", run_date))
+}
+
+intermediate_results_directory <- function() {
+  run_date <- basename(results_directory())
+  ensure_directory(file.path(project_root(), ".work", "results", run_date))
 }

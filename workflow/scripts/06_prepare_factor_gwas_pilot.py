@@ -19,7 +19,7 @@ def read_table(path):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--project-root", default=".")
-    parser.add_argument("--traits", default="config/traits.tsv")
+    parser.add_argument("--traits", default=".work/config/traits.tsv")
     parser.add_argument("--reference", required=True)
     parser.add_argument("--snps", type=int, default=500)
     args = parser.parse_args()

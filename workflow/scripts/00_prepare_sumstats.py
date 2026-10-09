@@ -8,7 +8,7 @@ import math
 import os
 import re
 from pathlib import Path
-from paths import results_dir
+from paths import intermediate_results_dir
 
 
 RSID = re.compile(r"^rs[0-9]+$")
@@ -145,7 +145,7 @@ def prepare_trait(root, trait, mode, hm3, stats):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--project-root", default=".")
-    parser.add_argument("--traits", default="config/traits.tsv")
+    parser.add_argument("--traits", default=".work/config/traits.tsv")
     parser.add_argument("--mode", choices=("ldsc", "full"), required=True)
     parser.add_argument("--hm3", default="reference/w_hm3.snplist")
     parser.add_argument("--trait", action="append", help="Prepare only the named trait; may be repeated")
@@ -165,7 +165,7 @@ def main():
         print(f"Preparing {trait['trait']} ({args.mode})", flush=True)
         prepare_trait(root, trait, args.mode, hm3, stats)
 
-    result = results_dir(root) / f"preparation_{args.mode}_qc.tsv"
+    result = intermediate_results_dir(root) / f"preparation_{args.mode}_qc.tsv"
     result.parent.mkdir(parents=True, exist_ok=True)
     with open(result, "w", newline="") as handle:
         fields = ["trait", "input", "kept", "duplicates", "invalid", "effect_multiplier", "output"]

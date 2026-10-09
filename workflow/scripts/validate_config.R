@@ -1,5 +1,5 @@
 args <- commandArgs(trailingOnly = TRUE)
-settings_path <- if (length(args)) args[[1]] else "config/workflow.tsv"
+settings_path <- if (length(args)) args[[1]] else ".work/config/workflow.tsv"
 source(file.path(Sys.getenv("GENOMICSEM_PROJECT_ROOT", unset = getwd()), "workflow", "scripts", "common.R"))
 
 settings <- read_workflow_settings(settings_path)

@@ -8,7 +8,8 @@ Sys.setenv(GENOMICSEM_PROJECT_ROOT = root)
 source(file.path(root, "workflow", "scripts", "common.R"))
 output_dir <- if (length(args) >= 2L) args[[2]] else results_directory()
 output_dir <- ensure_directory(project_path(output_dir))
-settings <- read_workflow_settings(if (length(args) == 3L) args[[3]] else "config/workflow.tsv")
+data_dir <- intermediate_results_directory()
+settings <- read_workflow_settings(if (length(args) == 3L) args[[3]] else ".work/config/workflow.tsv")
 traits <- read_traits(settings$traits_config)
 models <- read_models(settings$models_config)
 
@@ -17,7 +18,7 @@ primary <- models$label[models$role == "primary"]
 if (length(baseline) != 1L) baseline <- models$label[1]
 
 read_result <- function(filename) {
-  path <- file.path(output_dir, filename)
+  path <- file.path(data_dir, filename)
   if (!file.exists(path)) stop("Missing result: ", path)
   read.delim(path, check.names = FALSE, stringsAsFactors = FALSE)
 }

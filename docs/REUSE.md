@@ -1,117 +1,94 @@
 # Reusing the GenomicSEM workflow
 
-The workflow code is study-agnostic. A new analysis should change configuration
-and model files, not scripts.
+The workflow code is study-agnostic. A new analysis should change one file,
+`config/analysis.yaml`, not scripts or generated workflow inputs.
 
-## Configuration layers
+## The analysis config
 
-### `config/workflow.tsv`
-
-Defines analysis-wide resources and settings:
+`config/analysis.yaml` is the only user-edited configuration. It contains:
 
 - `analysis_id`: short output prefix;
-- `traits_config`: trait table to use;
-- `models_config`: model table to use;
-- `hm3_reference`: HapMap3 list for munging/LDSC;
-- `ld_reference` and `weight_reference`: LDSC directories;
-- `gwas_reference`: SNP/allele/MAF table for `sumstats()`;
-- `pilot_snps`: default pilot size;
-- `info_filter` and `maf_filter`: QC thresholds.
+- `references`: HapMap3, LD-score, regression-weight, and GWAS allele/MAF paths;
+- `results`: pilot size and INFO/MAF filters;
+- `traits`: one entry per GWAS with its file, sample details, and source columns;
+- `models`: one or more inline model definitions and the selected primary model;
+- `cohort_metadata` and `cohort_overlap`: report context for study overlap.
 
-To keep several analyses in one checkout, create another settings file and run:
+Each trait's `columns` maps the source summary-statistic column names (including
+P or -log10(P)); `effect_multiplier` can reverse effect direction. Use
+`sample_prev` and `population_prev` for binary-trait prevalence assumptions.
+Values in the example are fictional.
+
+Each model has a `label`, `role`, `factor_name`, `snp_regression`, and multiline
+`syntax`. Exactly one model must have `role: primary`; any number of other models
+can be compared. The primary model is used for the SNP-level GWAS.
+
+To run a different analysis file:
 
 ```bash
-GENOMICSEM_SETTINGS=config/my_analysis/workflow.tsv ./run_pipeline.sh validate
-GENOMICSEM_SETTINGS=config/my_analysis/workflow.tsv ./run_pipeline.sh all
+GENOMICSEM_SETTINGS=config/my_analysis.yaml ./run_pipeline.sh validate
+GENOMICSEM_SETTINGS=config/my_analysis.yaml ./run_pipeline.sh all
 ```
 
 The equivalent Snakemake command is:
 
 ```bash
-snakemake --config settings=config/my_analysis/workflow.tsv --cores 1
+snakemake --config analysis_config=config/my_analysis.yaml --cores 1
 ```
-
-### `config/traits.tsv`
-
-One row represents one GWAS. The table controls:
-
-- internal and display names;
-- original, LDSC-prepared, and genome-wide-prepared file paths;
-- N and binary-trait prevalence values;
-- ancestry and genome build;
-- the input names of chromosome, position, rsID, alleles, allele frequency,
-  beta, SE, P or -log10(P), and N columns;
-- effect-direction multiplier;
-- whether the effect/SE is logistic and whether the GWAS used OLS.
-
-For example, `effect_multiplier=-1` reverses a trait's beta while leaving the
-alleles unchanged. Use `1` when no reversal is required.
-
-Copy `config/traits.example.tsv` when starting a new project. You may add or
-remove trait rows; the preparation, munging, LDSC, plotting, pilot, and factor-
-GWAS scripts determine the number and names of traits from this table.
-
-### `config/models.tsv`
-
-One row represents one lavaan/GenomicSEM model:
-
-- `label`: safe output label;
-- `model_file`: model syntax file;
-- `role`: `baseline`, `candidate`, or `primary`;
-- `factor_name`: latent factor tested in the SNP analysis;
-- `snp_regression`: regression appended for `userGWAS()`, such as `F1 ~ SNP`.
-
-Exactly one model must be marked `primary`. Any number of models can be fitted
-and compared. The primary model is carried into the SNP-level GWAS.
 
 ## Starting a different analysis
 
 1. Copy the repository without `data/raw/`, `reference/`, `.work/`, or large
    `results/` files.
 2. Place or link the new GWAS files under `data/raw/`.
-3. Copy `config/traits.example.tsv` and describe every input column accurately.
-4. Create one or more model text files using the trait names from the table.
-5. Update `config/models.tsv`, marking one scientifically justified model as
+3. Edit `config/analysis.yaml`: add traits and their source columns, reference
+   paths, cohort details, and inline model syntax; mark one justified model
    `primary`.
-6. Update reference paths and output prefix in `config/workflow.tsv`.
-7. Validate before running anything:
+4. Validate before running anything:
 
 ```bash
 ./run_pipeline.sh validate
 ```
 
-8. Run through the model stage:
+5. Run through the model stage:
 
 ```bash
 ./run_pipeline.sh all
 ```
 
-9. Review genetic correlations, model fit, residual variances, and cohort
+6. Review genetic correlations, model fit, residual variances, and cohort
    overlap. Do not run a full factor GWAS just because a model converges.
-10. Test the SNP model on a small subset:
+7. Test the SNP model on a small subset:
 
 ```bash
 ./run_pipeline.sh gwas-pilot
 ```
 
-11. Submit the full stage to a scheduler on an approved machine:
+The pilot size is controlled by `results.pilot_snps` in `config/analysis.yaml`
+(500 by default). It checks harmonization and execution; it is not the full GWAS.
+
+8. Run the full factor GWAS after reviewing the pilot and model assumptions:
 
 ```bash
 ./run_pipeline.sh gwas
 ```
 
+This stage uses all eligible variants after harmonization and configured filters.
+It can take substantially longer and use more memory/storage than the pilot.
+For large jobs, submit this command through an approved scheduler.
+
 ## Stable workflow stages
 
 | Stage | Purpose | Driven by |
 |---|---|---|
-| `validate` | Check configuration, models, build consistency, and references | all configuration files |
-| `prepare` | Standardize columns, direction, P values, and HapMap3 subset | traits + workflow |
-| `munge` | GenomicSEM/LDSC munging | traits + workflow |
-| `ldsc` | Genetic and sampling covariance | traits + workflow |
-| `models` | Fit every configured model and compare results | models |
-| `report` | Generic correlation/loading/residual figure | traits + models |
-| `gwas-pilot` | Small iterative `userGWAS()` validation | traits + primary model |
-| `gwas` | Genome-wide preparation and analytic factor GWAS | traits + primary model |
+| `validate` | Check configuration, models, build consistency, and references | analysis config |
+| `prepare` | Standardize columns, direction, P values, and HapMap3 subset | analysis config |
+| `munge` | GenomicSEM/LDSC munging | analysis config |
+| `ldsc` | Genetic and sampling covariance | analysis config |
+| `models` | Fit every configured model and compare results | analysis config |
+| `report` | Generic correlation/loading/residual figure | analysis config |
+| `gwas-pilot` | Small iterative `userGWAS()` validation | analysis config |
+| `gwas` | Genome-wide preparation and analytic factor GWAS | analysis config |
 
 The Bash and Snakemake interfaces invoke these same stages. They are not two
 separate implementations; see `docs/SNAKEMAKE.md` for target names and cluster
@@ -129,8 +106,8 @@ Modularity cannot replace scientific decisions. Each new project must justify:
 - whether the factor is interpretable;
 - appropriate follow-up for Q-SNP heterogeneity.
 
-Those choices belong in the configuration, model files, and analysis-specific
-documentation. The software mechanics should not encode them.
+Those choices belong in the analysis config and analysis-specific documentation.
+The software mechanics should not encode them.
 
 The full-GWAS stage currently uses GenomicSEM's fast analytic `userGWAS()`
 estimator, which is intended for first-order measurement models. A higher-order,
@@ -140,8 +117,8 @@ estimator option rather than the current analytic full-genome path.
 
 ## Portability
 
-The workflow uses Bash, Python's standard library, R, and a project-local R
-library. Paths in configuration are relative to the project root, so the same
+The workflow uses Bash, Python with PyYAML, R, and a project-local R library.
+Paths in configuration are relative to the project root, so the same
 checkout can run locally, on Wynton, or on coreHPC. Set `GENOMICSEM_CORES`,
 `NSLOTS`, or `SLURM_CPUS_PER_TASK` through the scheduler rather than editing
 scripts.

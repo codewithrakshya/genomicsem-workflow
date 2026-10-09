@@ -1,4 +1,0 @@
-trait	display_name	raw_file	file	full_file	N	sample_prev	population_prev	type	ancestry	build	chr_col	bp_col	snp_col	a1_col	a2_col	af_col	beta_col	se_col	p_col	lp_col	n_col	effect_multiplier	se_logit	OLS
-trait_1	Trait 1	data/raw/trait_1.tsv.gz	.work/prepared/trait_1.hm3.tsv.gz	.work/factor_gwas/full/trait_1.tsv.gz	100000	NA	NA	continuous	EUR	GRCh37	CHR	BP	SNP	A1	A2	AF	BETA	SE	P		N	1	FALSE	TRUE
-trait_2	Trait 2	data/raw/trait_2.tsv.gz	.work/prepared/trait_2.hm3.tsv.gz	.work/factor_gwas/full/trait_2.tsv.gz	90000	NA	NA	continuous	EUR	GRCh37	CHR	BP	SNP	A1	A2	AF	BETA	SE	P		N	1	FALSE	TRUE
-trait_3	Trait 3	data/raw/trait_3.tsv.gz	.work/prepared/trait_3.hm3.tsv.gz	.work/factor_gwas/full/trait_3.tsv.gz	80000	NA	NA	continuous	EUR	GRCh37	CHR	BP	SNP	A1	A2	AF	BETA	SE	P		N	1	FALSE	TRUE

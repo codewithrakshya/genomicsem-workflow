@@ -1,7 +1,7 @@
 args <- commandArgs(trailingOnly = TRUE)
 mode <- if (length(args)) args[[1]] else "pilot"
-settings_path <- if (length(args) >= 2L) args[[2]] else "config/workflow.tsv"
-if (!mode %in% c("pilot", "full")) stop("Usage: 07_factor_gwas.R [pilot|full] [workflow.tsv]")
+settings_path <- if (length(args) >= 2L) args[[2]] else ".work/config/workflow.tsv"
+if (!mode %in% c("pilot", "full")) stop("Usage: 07_factor_gwas.R [pilot|full] [generated-workflow.tsv]")
 
 source(file.path(Sys.getenv("GENOMICSEM_PROJECT_ROOT", unset = getwd()), "workflow", "scripts", "common.R"))
 ensure_detectable_cores()

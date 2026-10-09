@@ -16,5 +16,9 @@ def results_dir(root):
     return Path(root) / 'results' / run_date()
 
 
+def intermediate_results_dir(root):
+    return Path(root) / '.work' / 'results' / run_date()
+
+
 if __name__ == '__main__':
     print(run_date())

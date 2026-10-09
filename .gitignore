@@ -1,6 +1,7 @@
 # Data, downloaded resources, generated output, and local environments
 /data/raw/**
 !/data/raw/.gitkeep
+/\.venv/
 /reference/**
 !/reference/.gitkeep
 /results/**

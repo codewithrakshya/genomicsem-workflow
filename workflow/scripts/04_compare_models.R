@@ -5,7 +5,7 @@ if (!length(args) %in% c(1L, 2L)) {
 
 source(file.path(Sys.getenv("GENOMICSEM_PROJECT_ROOT", unset = getwd()), "workflow", "scripts", "common.R"))
 models <- read_models(args[[1]])
-output_dir <- ensure_directory(project_path(if (length(args) == 2L) args[[2]] else results_directory()))
+output_dir <- ensure_directory(project_path(if (length(args) == 2L) args[[2]] else intermediate_results_directory()))
 
 read_result <- function(label, filename) {
   path <- project_path(file.path(".work", "models", label, filename))

@@ -44,7 +44,7 @@ genetic_correlation_table <- data.frame(
 )
 write.table(
   genetic_correlation_table,
-  file.path(results_directory(), "genetic_correlations.tsv"),
+  file.path(intermediate_results_directory(), "genetic_correlations.tsv"),
   sep = "\t",
   quote = FALSE,
   row.names = FALSE
@@ -58,7 +58,7 @@ genetic_covariance_table <- data.frame(
 )
 write.table(
   genetic_covariance_table,
-  file.path(results_directory(), "genetic_covariances.tsv"),
+  file.path(intermediate_results_directory(), "genetic_covariances.tsv"),
   sep = "\t",
   quote = FALSE,
   row.names = FALSE
