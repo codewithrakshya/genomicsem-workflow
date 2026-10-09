@@ -245,11 +245,29 @@ def build_report(root, settings_path):
     else:
         figure_html = '<p class="missing">Summary figure not available. Run the report stage after model fitting.</p>'
     section('figures', 'Visual summary of genetic sharing and model fit', figure_html)
+    gwas_columns = [
+        ('SNP', 'Variant identifier.'),
+        ('CHR / BP', 'Chromosome and base-pair position on the configured genome build.'),
+        ('A1 / A2', 'Effect allele and other allele; the beta is reported for A1 relative to A2.'),
+        ('MAF', 'Minor allele frequency after SNP harmonization and filtering.'),
+        (f'beta_{primary["factor_name"]}', 'Estimated SNP effect on the latent factor scale, not in hours or minutes.'),
+        (f'SE_{primary["factor_name"]}', 'Standard error of the factor effect estimate.'),
+        (f'Z_beta_{primary["factor_name"]}', 'Factor effect divided by its standard error.'),
+        (f'p_val_{primary["factor_name"]}', 'P-value for association between the SNP and the latent factor.'),
+        ('Q_omnibus / Q_omnibus_df / Q_omnibus_pval', 'Omnibus heterogeneity statistic, degrees of freedom, and p-value. A small p-value indicates the SNP effects across traits depart from the factor-predicted pattern.'),
+    ]
+    gwas_column_table = '<div class="table-scroll"><table><caption>Full factor-GWAS columns</caption><thead><tr><th scope="col">Column</th><th scope="col">Meaning</th></tr></thead><tbody>'
+    gwas_column_table += ''.join(
+        '<tr><th scope="row"><code>' + esc(name) + '</code></th><td style="white-space:normal">' + esc(description) + '</td></tr>'
+        for name, description in gwas_columns
+    )
+    gwas_column_table += '</tbody></table></div>'
     section('gwas', 'SNP associations with the common factor',
         '<p><strong>Method.</strong> GenomicSEM harmonizes SNP inputs with sumstats(), then fits the factor-on-SNP regression using userGWAS(). The pilot uses iterative DWLS; the full analysis uses analytic estimation with the primary measurement model.</p>'
         '<p>Factor associations test SNP effects on the latent factor scale, not directly in phenotype units. '
         'Q-SNP / omnibus heterogeneity tests departures from the effect pattern predicted by the common factor. '
         'Genome-wide significant rows are not independent loci; LD clumping or conditional analysis is needed.</p>'
+        + gwas_column_table
         + table(result / f'{analysis}_factor_gwas_summary.tsv')
         + '<details><summary>Pilot preview (first 10 rows)</summary>' + table(result / f'{analysis}_factor_gwas_pilot.tsv', 10) + '</details>'
         + '<p>Optional outputs are shown if present; their presence is not a validation of the measurement model. '
