@@ -1,0 +1,1 @@
+CommonFactor =~ trait_1 + trait_2 + trait_3

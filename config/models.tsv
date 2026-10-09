@@ -1,0 +1,2 @@
+label	model_file	role	factor_name	snp_regression
+common_factor	config/model_common_factor.txt	primary	CommonFactor	CommonFactor ~ SNP

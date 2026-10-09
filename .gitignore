@@ -1,0 +1,19 @@
+# Data, downloaded resources, generated output, and local environments
+/data/raw/**
+!/data/raw/.gitkeep
+/reference/**
+!/reference/.gitkeep
+/results/**
+!/results/.gitkeep
+/.work/
+/.snakemake/
+/workflow/R/library/
+__pycache__/
+*.py[cod]
+.DS_Store
+.Rhistory
+.RData
+.env
+.env.*
+/config/local/
+*.log

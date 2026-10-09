@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+project_root=$(CDPATH= cd -- "${script_dir}/../.." && pwd)
+
+export GENOMICSEM_PROJECT_ROOT="${project_root}"
+export R_LIBS_USER="${R_LIBS_USER:-${project_root}/workflow/R/library}"
+export OPENBLAS_NUM_THREADS=1
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
+export VECLIB_MAXIMUM_THREADS=1
+
+mkdir -p "${R_LIBS_USER}" "${project_root}/.work/logs" "${project_root}/.work/setup/environment"
+
+if ! command -v Rscript >/dev/null 2>&1; then
+  echo "Rscript was not found. Load or install R before running this command." >&2
+  exit 127
+fi
+
+cd "${project_root}"
+exec Rscript "$@"
