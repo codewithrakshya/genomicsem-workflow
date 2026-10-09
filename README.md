@@ -80,7 +80,8 @@ files, after harmonization and the configured INFO/MAF filters; it is not limite
 to the pilot count. The example config requires real GWAS inputs and references
 before it can run. Normal analysis stages do not reinstall GenomicSEM.
 
-Final report, figures, and optional factor-GWAS outputs are stored in
+Final report, figures (including a Manhattan plot after the full factor GWAS),
+and optional factor-GWAS outputs are stored in
 `results/YYYY-MM-DD/`. Supporting QC, covariance, and model-comparison tables are
 kept under `.work/results/YYYY-MM-DD/` and embedded in the HTML report.
 Rebuild HTML with `./run_pipeline.sh html-report`. Set `GENOMICSEM_RUN_DATE` to

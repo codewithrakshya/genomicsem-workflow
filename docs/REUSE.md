@@ -76,6 +76,8 @@ The pilot size is controlled by `results.pilot_snps` in `config/analysis.yaml`
 This stage uses all eligible variants after harmonization and configured filters.
 It can take substantially longer and use more memory/storage than the pilot.
 For large jobs, submit this command through an approved scheduler.
+It also creates a Manhattan plot in the dated results directory and embeds it in
+the HTML report.
 
 ## Stable workflow stages
 

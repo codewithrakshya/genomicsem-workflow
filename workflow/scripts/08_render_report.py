@@ -254,6 +254,17 @@ def build_report(root, settings_path):
         + '<details><summary>Pilot preview (first 10 rows)</summary>' + table(result / f'{analysis}_factor_gwas_pilot.tsv', 10) + '</details>'
         + '<p>Optional outputs are shown if present; their presence is not a validation of the measurement model. '
         'The complete compressed GWAS remains a separate file to keep this report portable.</p>')
+    manhattan_path = result / f'{analysis}_factor_gwas_manhattan.png'
+    if manhattan_path.exists():
+        encoded = base64.b64encode(manhattan_path.read_bytes()).decode('ascii')
+        manhattan_content = (
+            f'<figure><img src="data:image/png;base64,{encoded}" alt="Manhattan plot of SNP associations with the {esc(primary["factor_name"])} factor">'
+            '<figcaption>Each point is an autosomal SNP row; the dashed line marks P = 5 × 10⁻⁸. '
+            'The y-axis is capped at 50. Nearby significant rows may represent the same locus.</figcaption></figure>'
+        )
+    else:
+        manhattan_content = '<p class="missing">Full factor-GWAS Manhattan plot is not available. Run the full gwas stage to create it.</p>'
+    section('manhattan', 'Full factor-GWAS Manhattan plot', manhattan_content)
     section('overlap', 'Sample overlap and interpretation',
         '<p>Studies can share participants, so their estimates cannot be treated as independent. Multivariable LDSC estimates correlated sampling error, carried into model fitting through V. Accounting for dependence does not make overlapping studies independent replications.</p>'
         + '<details><summary>Study-specific overlap notes and sources</summary>' + text_file(root / settings['cohort_overlap']) + '</details>')

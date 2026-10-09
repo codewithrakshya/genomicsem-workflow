@@ -1,7 +1,8 @@
 # Results layout
 
 Final outputs are stored in `results/YYYY-MM-DD/`: the HTML report, summary
-figures, and optional pilot/full factor-GWAS outputs. Supporting QC, genetic
+figures, the full-GWAS Manhattan plot, and optional pilot/full factor-GWAS
+outputs. Supporting QC, genetic
 covariance/correlation, and model-comparison tables are stored in
 `.work/results/YYYY-MM-DD/` and embedded in the HTML report. Prepared and munged
 sumstats and LDSC/model objects are also kept in `.work/`.

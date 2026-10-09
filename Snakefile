@@ -48,6 +48,7 @@ MODEL_FITS = [f".work/models/{model['label']}/model_fit.rds" for model in MODELS
 PRIMARY_FIT = f".work/models/{PRIMARY['label']}/model_fit.rds"
 FACTOR_GWAS = f"{RESULTS}/{ANALYSIS_ID}_factor_gwas.tsv.gz"
 FACTOR_SUMMARY = f"{RESULTS}/{ANALYSIS_ID}_factor_gwas_summary.tsv"
+MANHATTAN_PLOT = f"{RESULTS}/{ANALYSIS_ID}_factor_gwas_manhattan.png"
 PILOT_RESULT = f"{RESULTS}/{ANALYSIS_ID}_factor_gwas_pilot.tsv"
 LD_FILES = [
     f"{SETTINGS['ld_reference']}/{chromosome}.l2.{suffix}"
@@ -184,6 +185,7 @@ rule gwas:
         FULL_FILES,
         FACTOR_GWAS,
         FACTOR_SUMMARY,
+        MANHATTAN_PLOT,
     shell:
         "./run_pipeline.sh gwas"
 

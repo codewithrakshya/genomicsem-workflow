@@ -17,6 +17,7 @@ setting() {
   awk -F '\t' -v key="$1" 'NR > 1 && $1 == key { print $2; exit }' "${settings_file}"
 }
 
+analysis_id=$(setting analysis_id)
 traits_config=$(setting traits_config)
 models_config=$(setting models_config)
 hm3=$(setting hm3_reference)
@@ -67,6 +68,12 @@ html_report() {
 
 report() {
   workflow/bin/run-r workflow/scripts/05_visualize_results.R . "${results_dir}" "${settings_file}"
+  full_gwas="${results_dir}/${analysis_id}_factor_gwas.tsv.gz"
+  if [[ -s "${full_gwas}" ]]; then
+    factor_name=$(awk -F '\t' 'NR > 1 && $3 == "primary" { print $4; exit }' "${models_config}")
+    workflow/bin/run-r workflow/scripts/10_plot_manhattan.R \
+      "${full_gwas}" "${results_dir}/${analysis_id}_factor_gwas_manhattan.png" "${factor_name}"
+  fi
   html_report
 }
 
@@ -82,7 +89,7 @@ gwas() {
   python3 workflow/scripts/00_prepare_sumstats.py \
     --project-root . --traits "${traits_config}" --mode full --hm3 "${hm3}"
   workflow/bin/run-r workflow/scripts/07_factor_gwas.R full "${settings_file}"
-  html_report
+  report
 }
 
 case "${stage}" in
