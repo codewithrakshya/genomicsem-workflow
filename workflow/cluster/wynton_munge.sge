@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+#$ -S /bin/bash
+#$ -cwd
+#$ -j yes
+#$ -N genomicsem_munge
+#$ -pe smp 4
+#$ -l mem_free=8G
+#$ -l h_rt=08:00:00
+
+set -euo pipefail
+module load CBI r
+
+export GENOMICSEM_CORES="${NSLOTS:-1}"
+workflow/bin/run-r workflow/scripts/01_munge.R \
+  config/traits.tsv \
+  reference/w_hm3.snplist

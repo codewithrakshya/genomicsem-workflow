@@ -34,7 +34,7 @@ read_traits <- function(path) {
   traits
 }
 
-read_workflow_settings <- function(path = ".work/config/workflow.tsv") {
+read_workflow_settings <- function(path = "config/workflow.tsv") {
   path <- project_path(path)
   settings <- read.delim(
     path, header = TRUE, sep = "\t", quote = "", comment.char = "",
@@ -58,6 +58,19 @@ read_models <- function(path) {
   if (length(missing)) stop("Missing model columns: ", paste(missing, collapse = ", "))
   if (anyDuplicated(models$label)) stop("Model labels must be unique")
   if (sum(models$role == "primary") != 1L) stop("Exactly one model must have role=primary")
+
+  if (!"std_lv" %in% names(models)) models$std_lv <- TRUE
+  models$std_lv <- logical_column(models$std_lv, "std_lv")
+  if (!"reference_indicator" %in% names(models)) models$reference_indicator <- ""
+
+  primary <- models[models$role == "primary", , drop = FALSE]
+  if (!primary$std_lv && !nzchar(primary$reference_indicator)) {
+    stop("The primary unit-loading model must specify reference_indicator")
+  }
+  if (primary$std_lv && nzchar(primary$reference_indicator)) {
+    stop("reference_indicator should be blank when std_lv=TRUE")
+  }
+
   models$model_file <- vapply(models$model_file, project_path, character(1))
   models
 }
@@ -114,9 +127,4 @@ results_directory <- function() {
   parsed <- suppressWarnings(as.Date(run_date, format = "%Y-%m-%d"))
   if (is.na(parsed) || !identical(format(parsed, "%Y-%m-%d"), run_date)) stop("GENOMICSEM_RUN_DATE must be YYYY-MM-DD")
   ensure_directory(file.path(project_root(), "results", run_date))
-}
-
-intermediate_results_directory <- function() {
-  run_date <- basename(results_directory())
-  ensure_directory(file.path(project_root(), ".work", "results", run_date))
 }

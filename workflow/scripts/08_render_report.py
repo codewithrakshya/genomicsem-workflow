@@ -24,7 +24,6 @@ def build_report(root, settings_path):
     if Path(analysis).name != analysis or analysis in ('.', '..'):
         raise ValueError('analysis_id must be a filename component')
     result = results_dir(root)
-    intermediate = root / '.work' / 'results' / result.name
     sections = []
     esc = lambda value: escape(str(value), quote=True)
 
@@ -77,7 +76,7 @@ def build_report(root, settings_path):
 
     primary = next(m for m in models if m['role'] == 'primary')
     section('overview', 'Introduction',
-        '<p class="lead">Do the input phenotypes share a coherent genetic factor, and which common genetic variants are associated with that factor?</p>'
+        '<p class="lead">Do the input sleep phenotypes share a coherent genetic sleep-duration factor, and which common genetic variants are associated with that factor?</p>'
         '<p>This analysis combines GWAS summary statistics, not individual participant records. Genomic structural equation modeling (GenomicSEM) first models the genetic relationships among traits, then estimates SNP associations with the shared factor.</p>'
         f'<p>The analysis includes {len(traits)} traits and {len(models)} measurement models. The model labeled <strong>{esc(primary["label"])}</strong> is selected for the factor GWAS. “Primary” describes its pipeline role; it does not establish scientific validation.</p>'
         '<p><strong>Reading this report.</strong> Begin with the findings, then review the study definitions, genetic correlations, and model assumptions before interpreting SNP results. Expandable sections contain detailed estimates and model syntax. This report summarizes available outputs; it does not present independent replication.</p>')
@@ -85,7 +84,7 @@ def build_report(root, settings_path):
     # Derive the findings from result tables so the report updates with each analysis.
     findings = []
     labels = {trait['trait']: trait.get('display_name', trait['trait']) for trait in traits}
-    correlation_path = intermediate / 'genetic_correlations.tsv'
+    correlation_path = result / 'genetic_correlations.tsv'
     if correlation_path.exists():
         correlations = read_rows(correlation_path)
         pairs = []
@@ -96,7 +95,7 @@ def build_report(root, settings_path):
                     pairs.append(f"{esc(labels.get(row['trait'], row['trait']))}–{esc(labels.get(other['trait'], other['trait']))}: <strong>{float(value):.3f}</strong>")
         if pairs:
             findings.append('Estimated genetic correlations: ' + '; '.join(pairs) + '. These are point estimates of genetic sharing.')
-    parameter_path = intermediate / 'model_parameter_comparison.tsv'
+    parameter_path = result / 'model_parameter_comparison.tsv'
     if parameter_path.exists():
         parameters = read_rows(parameter_path)
         for model in models:
@@ -106,7 +105,7 @@ def build_report(root, settings_path):
             for row in negative:
                 findings.append(f"The {esc(model['label'])} model estimates a negative variance for {esc(labels.get(row['lhs'], row['lhs']))} "
                                 f"(<strong>{float(row[column]):.4f}</strong>), indicating an inadmissible solution. A boundary constraint requires scientific justification.")
-    fit_path = intermediate / 'model_fit_comparison.tsv'
+    fit_path = result / 'model_fit_comparison.tsv'
     if fit_path.exists():
         for fit in read_rows(fit_path):
             if fit['model'] == primary['label']:
@@ -151,12 +150,12 @@ def build_report(root, settings_path):
     study_table += ''.join('<tr>' + ''.join('<td>' + esc(trait.get(key, 'NA')) + '</td>' for key, _ in study_columns) + '</tr>' for trait in traits)
     study_table += '</tbody></table></div>'
     cohort_notes = ''
-    cohort_path = root / settings['cohort_metadata']
+    cohort_path = root / 'config/cohort_metadata.tsv'
     if cohort_path.exists():
         for row in read_rows(cohort_path):
             if row['trait'] in {t['trait'] for t in traits}:
                 cohort_notes += '<p><strong>' + esc(row['study']) + '.</strong> ' + esc(row['phenotype']) + '. ' + esc(row['measurement']) + '; cohorts: ' + esc(row['cohorts']) + '. Reported sample: ' + esc(row['sample_size']) + '.</p>'
-    cohort_notes += '<p><strong>Direction and scale.</strong> Reversing an effect changes its direction; it does not change the phenotype definition or convert binary effects into continuous measurement units. Configured effective sample sizes for case–control data can differ from participant counts. These remain distinct phenotypes after direction alignment.</p>'
+    cohort_notes += '<p><strong>Direction and scale.</strong> Reversing short-sleep effects aligns them toward lower short-sleep liability; it does not convert a binary phenotype into hours of sleep. Configured effective sample sizes for case–control data can differ from participant counts. These remain distinct phenotypes after direction alignment.</p>'
     section('inputs', 'Study populations and phenotypes',
         cohort_notes +
         '<p>Effect direction is explicitly configured through <code>effect_multiplier</code>; it is not inferred from the GWAS filename. '
@@ -178,7 +177,7 @@ def build_report(root, settings_path):
     reference_html += '<div class="table-scroll"><table><caption>Reference resources used in the analysis</caption><thead><tr><th>Resource</th><th>Configured file / directory</th><th>Used by</th><th>Purpose</th></tr></thead><tbody>'
     reference_html += ''.join('<tr>' + ''.join('<td style="white-space:normal;min-width:150px">' + esc(value) + '</td>' for value in row) + '</tr>' for row in reference_rows)
     reference_html += '</tbody></table></div>'
-    reference_html += '<p>The example configuration points to European LD-score resources and the GenomicSEM 1000 Genomes Phase 3 reference; these resources must be downloaded separately. '
+    reference_html += '<p>The bundled analysis uses European LD-score resources and the GenomicSEM 1000 Genomes Phase 3 reference. '
     reference_html += 'Configured trait ancestry: ' + esc(', '.join(sorted({t.get('ancestry', 'unspecified') for t in traits}))) + '; genome build: ' + esc(', '.join(sorted({t.get('build', 'unspecified') for t in traits}))) + '. '
     reference_html += 'Reference ancestry and variant coordinates must be compatible with the input GWAS. Changing the configured paths requires checking the replacement reference metadata.</p>'
     reference_html += '<p>HapMap3 is a SNP selection resource, LD scores describe correlations between variants, and the GWAS reference supplies alleles and frequencies; these resources serve different purposes. '
@@ -187,17 +186,17 @@ def build_report(root, settings_path):
     reference_html += '<a href="https://github.com/GenomicSEM/GenomicSEM/wiki/4.-Common-Factor-GWAS">GenomicSEM common-factor GWAS tutorial</a>; '
     reference_html += '<a href="https://utexas.box.com/s/vkd36n197m8klbaio3yzoxsee6sxo11v">reference downloads linked by GenomicSEM</a>.</p>'
     section('resources', 'Reference resources and why they are needed', reference_html)
-    section('qc', 'Preparation quality control', table(intermediate / 'preparation_ldsc_qc.tsv')
+    section('qc', 'Preparation quality control', table(result / 'preparation_ldsc_qc.tsv')
         + '<p>“Kept” counts precede subsequent munging/harmonization. In LDSC mode, variants outside HapMap3 are skipped '
         'before duplicate and invalid-row counting; these columns are not an exhaustive breakdown of all exclusions.</p>'
-        + table(intermediate / 'preparation_full_qc.tsv'))
+        + table(result / 'preparation_full_qc.tsv'))
     section('ldsc', 'Genetic covariance and correlation',
         '<p><strong>Question.</strong> How strongly are the genetic influences on the traits related?</p>'
         '<p><strong>Method.</strong> Multivariable LD score regression estimates genetic covariance S and sampling covariance V. V represents uncertainty and correlated sampling error, including that arising from overlapping participants.</p>'
         '<p>The diagonal of S contains SNP-heritability estimates on the analysis scales; off-diagonal entries are genetic covariances. '
         'Genetic correlations standardize these covariances: r<sub>g</sub>(i,j) = S<sub>ij</sub> / √(S<sub>ii</sub>S<sub>jj</sub>). '
         'The displayed correlation table contains point estimates, not confidence intervals.</p>'
-        + table(intermediate / 'genetic_covariances.tsv') + table(intermediate / 'genetic_correlations.tsv')
+        + table(result / 'genetic_covariances.tsv') + table(result / 'genetic_correlations.tsv')
         + '<p><strong>Interpretation.</strong> Positive genetic correlations indicate aligned genetic influences; they do not establish causation or make phenotypes interchangeable. Differences between pairs require assessment of uncertainty.</p>'
         + '<details><summary>Sampling covariance V</summary>' + table(root / '.work/ldsc/sampling_covariance_V.tsv') + '</details>')
     model_content = ('<p><strong>Question.</strong> Can a shared genetic factor describe the observed trait relationships?</p>'
@@ -233,9 +232,9 @@ def build_report(root, settings_path):
         model_content += '<p>SNP regression: <code>' + esc(model['snp_regression']) + '</code></p></details>'
         model_content += '<details><summary>Recorded warnings: ' + esc(model['label']) + '</summary>'
         model_content += text_file(root / '.work/models' / model['label'] / 'model_warnings.txt') + '</details>'
-    section('models', 'Factor-model results', model_content + table(intermediate / 'model_fit_comparison.tsv')
-        + text_file(intermediate / 'model_comparison_summary.txt')
-        + '<details><summary>All parameter estimates</summary>' + table(intermediate / 'model_parameter_comparison.tsv') + '</details>')
+    section('models', 'Factor-model results', model_content + table(result / 'model_fit_comparison.tsv')
+        + text_file(result / 'model_comparison_summary.txt')
+        + '<details><summary>All parameter estimates</summary>' + table(result / 'model_parameter_comparison.tsv') + '</details>')
     figure = result / 'genomicsem_summary.png'
     if figure.exists():
         encoded = base64.b64encode(figure.read_bytes()).decode('ascii')
@@ -285,7 +284,7 @@ def build_report(root, settings_path):
     section('manhattan', 'Full factor-GWAS Manhattan plot', manhattan_content)
     section('overlap', 'Sample overlap and interpretation',
         '<p>Studies can share participants, so their estimates cannot be treated as independent. Multivariable LDSC estimates correlated sampling error, carried into model fitting through V. Accounting for dependence does not make overlapping studies independent replications.</p>'
-        + '<details><summary>Study-specific overlap notes and sources</summary>' + text_file(root / settings['cohort_overlap']) + '</details>')
+        + '<details><summary>Study-specific overlap notes and sources</summary>' + text_file(root / 'config/cohort_overlap.md') + '</details>')
     section('interpretation', 'Discussion and limitations',
         '<p><strong>What is established here.</strong> Genetic correlations describe sharing among measured traits. Model comparisons show how the configured factor structures represent that covariance. Factor-GWAS associations are conditional on the selected measurement model.</p>'
         '<p><strong>What needs a scientific decision.</strong> A negative residual variance is inadmissible. Fixing it to zero changes the model assumption; it does not demonstrate absence of trait-specific genetic influences. Published precedent and favorable approximate fit indices alone do not validate that choice.</p>'
@@ -332,6 +331,6 @@ def build_report(root, settings_path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--project-root', default='.')
-    parser.add_argument('--settings', default='.work/config/workflow.tsv')
+    parser.add_argument('--settings', default='config/workflow.tsv')
     args = parser.parse_args()
     print('HTML report written to', build_report(Path(args.project_root).resolve(), Path(args.settings)))

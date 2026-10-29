@@ -1,0 +1,2 @@
+SleepDuration =~ 1*Dashti_sleep_duration + Austin_short_reversed + Portas_sleep_duration
+Dashti_sleep_duration ~~ 0*Dashti_sleep_duration

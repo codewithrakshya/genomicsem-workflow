@@ -1,0 +1,4 @@
+trait	study	cohorts	phenotype	measurement	ancestry	sample_size	overlap_note
+Austin_short_reversed	Austin-Zimmerman et al. 2023	UK Biobank + Million Veteran Program	Short sleep <=5 hours versus normal sleep 7-8 hours	Self-report	EUR	47054 cases + 382950 controls	Partially overlaps Dashti and Portas through its UK Biobank component; exact participant overlap is not available from summary statistics
+Dashti_sleep_duration	Dashti et al. 2019	UK Biobank	Habitual sleep duration	Self-report	EUR	446118	Substantial UK Biobank overlap with Austin; Portas is drawn from the UK Biobank accelerometer subset
+Portas_sleep_duration	Portas et al. 2026	UK Biobank	Night-time sleep duration	Wrist accelerometer with machine-learned sleep classification	EUR	80013	Likely largely nested within the Dashti UK Biobank sample and partially overlaps the UK Biobank component of Austin

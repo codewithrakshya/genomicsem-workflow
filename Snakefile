@@ -8,17 +8,13 @@ from pathlib import Path
 
 ROOT = Path(workflow.basedir)
 sys.path.insert(0, str(ROOT / "workflow/scripts"))
-from configuration import materialize_config
 from paths import run_date
 if "run_date" in config:
     os.environ["GENOMICSEM_RUN_DATE"] = str(config["run_date"])
 os.environ["GENOMICSEM_RUN_DATE"] = run_date()
 RESULTS = "results/" + os.environ["GENOMICSEM_RUN_DATE"]
-INTERMEDIATE_RESULTS = ".work/results/" + os.environ["GENOMICSEM_RUN_DATE"]
-CONFIG_FILE = Path(config.get("settings", "config/analysis.yaml"))
-materialize_config(ROOT, CONFIG_FILE)
-SETTINGS_FILE = Path(".work/config/workflow.tsv")
-os.environ["GENOMICSEM_SETTINGS"] = str(CONFIG_FILE)
+SETTINGS_FILE = Path(config.get("settings", "config/workflow.tsv"))
+os.environ["GENOMICSEM_SETTINGS"] = str(SETTINGS_FILE)
 
 
 def read_key_value(path):
@@ -68,6 +64,8 @@ rule all:
         f"{RESULTS}/{ANALYSIS_ID}_report.html",
         f"{RESULTS}/genomicsem_summary.png",
         f"{RESULTS}/genomicsem_summary.pdf",
+        f"{RESULTS}/model_fit_comparison.tsv",
+        f"{RESULTS}/genetic_correlations.tsv",
 
 
 rule setup:
@@ -88,7 +86,6 @@ rule check:
 
 rule validate:
     input:
-        str(CONFIG_FILE),
         str(SETTINGS_FILE),
         str(TRAITS_FILE),
         str(MODELS_FILE),
@@ -108,7 +105,7 @@ rule prepare:
         SETTINGS["hm3_reference"],
     output:
         PREPARED_FILES,
-        f"{INTERMEDIATE_RESULTS}/preparation_ldsc_qc.tsv",
+        f"{RESULTS}/preparation_ldsc_qc.tsv",
     shell:
         "./run_pipeline.sh prepare"
 
@@ -129,8 +126,8 @@ rule ldsc:
         REFERENCE_LD_FILES,
     output:
         ".work/ldsc/ldsc_output.rds",
-        f"{INTERMEDIATE_RESULTS}/genetic_correlations.tsv",
-        f"{INTERMEDIATE_RESULTS}/genetic_covariances.tsv",
+        f"{RESULTS}/genetic_correlations.tsv",
+        f"{RESULTS}/genetic_covariances.tsv",
     params:
         ld=SETTINGS["ld_reference"],
         weights=SETTINGS["weight_reference"],
@@ -144,18 +141,18 @@ rule models:
         MODEL_FILES,
     output:
         MODEL_FITS,
-        f"{INTERMEDIATE_RESULTS}/model_fit_comparison.tsv",
-        f"{INTERMEDIATE_RESULTS}/model_parameter_comparison.tsv",
-        f"{INTERMEDIATE_RESULTS}/model_comparison_summary.txt",
+        f"{RESULTS}/model_fit_comparison.tsv",
+        f"{RESULTS}/model_parameter_comparison.tsv",
+        f"{RESULTS}/model_comparison_summary.txt",
     shell:
         "./run_pipeline.sh models"
 
 
 rule report:
     input:
-        f"{INTERMEDIATE_RESULTS}/genetic_correlations.tsv",
-        f"{INTERMEDIATE_RESULTS}/model_fit_comparison.tsv",
-        f"{INTERMEDIATE_RESULTS}/model_parameter_comparison.tsv",
+        f"{RESULTS}/genetic_correlations.tsv",
+        f"{RESULTS}/model_fit_comparison.tsv",
+        f"{RESULTS}/model_parameter_comparison.tsv",
     output:
         f"{RESULTS}/genomicsem_summary.png",
         f"{RESULTS}/genomicsem_summary.pdf",
@@ -193,19 +190,19 @@ rule gwas:
 rule html_report:
     input:
         f"{RESULTS}/genomicsem_summary.png",
-        f"{INTERMEDIATE_RESULTS}/genetic_covariances.tsv",
-        f"{INTERMEDIATE_RESULTS}/genetic_correlations.tsv",
-        f"{INTERMEDIATE_RESULTS}/model_fit_comparison.tsv",
-        f"{INTERMEDIATE_RESULTS}/model_parameter_comparison.tsv",
-        f"{INTERMEDIATE_RESULTS}/model_comparison_summary.txt",
-        f"{INTERMEDIATE_RESULTS}/preparation_ldsc_qc.tsv",
-        str(CONFIG_FILE),
+        f"{RESULTS}/genetic_covariances.tsv",
+        f"{RESULTS}/genetic_correlations.tsv",
+        f"{RESULTS}/model_fit_comparison.tsv",
+        f"{RESULTS}/model_parameter_comparison.tsv",
+        f"{RESULTS}/model_comparison_summary.txt",
+        f"{RESULTS}/preparation_ldsc_qc.tsv",
+        str(SETTINGS_FILE),
         str(TRAITS_FILE),
         str(MODELS_FILE),
         MODEL_FILES,
         "workflow/scripts/08_render_report.py",
         "workflow/scripts/paths.py",
-        SETTINGS["cohort_overlap"],
+        "config/cohort_overlap.md",
     output:
         f"{RESULTS}/{ANALYSIS_ID}_report.html",
     shell:

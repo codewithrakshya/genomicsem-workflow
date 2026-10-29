@@ -1,6 +1,6 @@
 args <- commandArgs(trailingOnly = TRUE)
-if (!length(args) %in% c(2L, 3L)) {
-  stop("Usage: 03_fit_model.R <ldsc-output.rds> <model.txt> [output-label]")
+if (!length(args) %in% c(2L, 3L, 4L)) {
+  stop("Usage: 03_fit_model.R <ldsc-output.rds> <model.txt> [output-label] [std_lv]")
 }
 
 source(file.path(Sys.getenv("GENOMICSEM_PROJECT_ROOT", unset = getwd()), "workflow", "scripts", "common.R"))
@@ -9,7 +9,12 @@ library(GenomicSEM)
 
 ldsc_path <- project_path(args[[1]])
 model_path <- project_path(args[[2]])
-output_label <- if (length(args) == 3L) args[[3]] else ""
+output_label <- if (length(args) >= 3L && nzchar(args[[3]])) args[[3]] else ""
+std_lv_text <- if (length(args) == 4L) args[[4]] else "TRUE"
+if (!toupper(trimws(std_lv_text)) %in% c("TRUE", "FALSE")) {
+  stop("std_lv must be TRUE or FALSE")
+}
+std_lv <- identical(toupper(trimws(std_lv_text)), "TRUE")
 if (nzchar(output_label) && !grepl("^[A-Za-z0-9_.-]+$", output_label)) {
   stop("Output label may contain only letters, numbers, dots, underscores, and hyphens")
 }
@@ -27,7 +32,7 @@ fit <- withCallingHandlers(
     estimation = "DWLS",
     model = model,
     CFIcalc = TRUE,
-    std.lv = TRUE,
+    std.lv = std_lv,
     imp_cov = TRUE
   ),
   warning = function(condition) {

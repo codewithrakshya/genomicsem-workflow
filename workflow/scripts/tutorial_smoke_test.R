@@ -6,7 +6,7 @@ if (!requireNamespace("GenomicSEM", quietly = TRUE)) {
   stop("GenomicSEM is not installed. Run workflow/scripts/install_genomicsem.R first.")
 }
 
-traits <- c("trait_1", "trait_2", "trait_3")
+traits <- c("sleep_duration", "insomnia", "chronotype")
 S <- matrix(
   c(
     0.40, 0.18, 0.14,
@@ -23,7 +23,7 @@ S <- matrix(
 V <- diag(c(0.0004, 0.0002, 0.0002, 0.0004, 0.0002, 0.0004))
 covariance_structure <- list(V = V, S = S)
 
-model <- "CommonFactor =~ trait_1 + trait_2 + trait_3"
+model <- "Sleep =~ sleep_duration + insomnia + chronotype"
 fit <- GenomicSEM::usermodel(
   covstruc = covariance_structure,
   estimation = "DWLS",

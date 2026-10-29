@@ -30,10 +30,6 @@ The default target stops after the model report, matching:
 ./run_pipeline.sh all
 ```
 
-Neither default target runs SNP associations. `gwas_pilot` uses the configured
-pilot size (500 variants by default); review its output before running
-`gwas`, which analyzes all eligible variants after harmonization and filters.
-
 Review those results before running:
 
 ```bash
@@ -41,7 +37,7 @@ snakemake gwas_pilot --cores 1
 snakemake gwas --cores 1
 ```
 
-## Dry run
+## Dry run and provenance
 
 Inspect the planned DAG without executing it:
 
@@ -57,15 +53,15 @@ snakemake --dag | dot -Tpng > workflow_dag.png
 
 ## Alternate analysis configuration
 
-Both interfaces use `config/analysis.yaml` by default. To select another config,
-the Bash interface accepts `GENOMICSEM_SETTINGS`; Snakemake accepts:
+The Bash interface selects another settings file with `GENOMICSEM_SETTINGS`.
+The Snakemake equivalent is:
 
 ```bash
-snakemake --config analysis_config=config/my_analysis.yaml --cores 1
+snakemake --config settings=config/my_analysis/workflow.tsv --cores 1
 ```
 
-The selected file contains the analysis settings, traits, and model syntax.
-Generated intermediate tables are written under `.work/config/`.
+The alternate settings table points to its own trait and model tables, so both
+interfaces remain configuration-driven.
 
 ## HPC execution
 
@@ -108,8 +104,7 @@ syntax, and output paths under Bash and Snakemake.
 `results/YYYY-MM-DD/<analysis_id>_report.html` combines workflow steps (including which
 steps call GenomicSEM), current configuration, QC tables, covariance and
 correlation matrices, model syntax/fit/warnings, the embedded summary figure,
-and available pilot/full GWAS results. Supporting tables and working objects are
-retained under `.work/`.
+and available pilot/full GWAS results. Execution records are retained separately under `.work/runs/`.
 It is self-contained and can be opened or shared without an internet connection.
 The full compressed GWAS is kept separate.
 

@@ -1,0 +1,4 @@
+label	model_file	role	factor_name	snp_regression	std_lv	reference_indicator
+unconstrained	config/model_unconstrained.txt	baseline	SleepDuration	SleepDuration ~ SNP	TRUE
+constrained	config/model_constrained_dashti.txt	baseline	SleepDuration	SleepDuration ~ SNP	TRUE
+constrained_dashti_unitloading	config/model_constrained_dashti_unitloading.txt	primary	SleepDuration	SleepDuration ~ SNP	FALSE	Dashti_sleep_duration
